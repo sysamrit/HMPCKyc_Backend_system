@@ -36,7 +36,24 @@ const getHmpcDatabyID = async (req, res) => {
 
 const setHmpcDatatoSql = async (req, res) => {
     try{
-        const data = req.body;
+        const data = req.body.row;
+        const hmPhone = data[6];
+        const pcPhone = data[13];
+
+        let checkQuery = `
+            SELECT * FROM tbl_hm_pc_kyc 
+            WHERE hm_phone_number = ? AND pc_phone_number = ?
+        `;
+        const [existing] = await db.promise().execute(checkQuery, [hmPhone, pcPhone]);
+
+        if (existing.length > 0) {
+
+            return res.status(400).json({ 
+                status: 400, 
+                message: "Either HM or PC phone number already exists." 
+            });
+        }
+
         const insertquery = 'INSERT INTO `tbl_hm_pc_kyc`(`timestamp`,`registration_no`,`ihb_name`,`executive_name`,`kyc_details`,`hm_name`,`hm_mobile_no`,`hm_aadhaar_card_no`,`hm_aadhaar_card_pic`,`hm_bank_account_no`,`hm_bank_pass_pic`,`dob_of_hm`,`pc_name`,`pc_mobile_no`,`pc_aadhaar_card_no`,`pc_aadhaar_card_pic`,`pc_bank_account_no`,`pc_bank_pass_pic`,`dob_of_pc`,`code_of_hm`,`code_of_pc`,`technical_ver`,`crm_ver`,`verify_date_tech`,`verify_date_crm`,`hm_bank_name`,`hm_branch_name`,`hm_ifsc_code`,`pc_bank_name`,`pc_branch_name`,`pc_ifsc_code`,`remarks_tech`,`remarks_crm`) VALUES (?)';
 
         await db.promise().execute(insertquery, [data]);
@@ -67,21 +84,19 @@ const setHmpcTechVer = async (req, res) => {
 
         let updateQuery;
         let updateParams;
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const timestamp_tech = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
         if (action === "Rejected") {
             // Do not update verify_date_tech
             updateQuery = `
                 UPDATE tbl_hm_pc_kyc 
-                SET technical_ver = ?, remarks_tech = ?
+                SET technical_ver = ?, verify_date_tech = ?, remarks_tech = ?
                 WHERE hm_pc_id = ?
             `;
-            updateParams = [action, remarks_tech, hm_pc_id];
+            updateParams = [action, timestamp_tech, remarks_tech, hm_pc_id];
         } else {
-            // Update with timestamp
-            const now = new Date();
-            const pad = (n) => n.toString().padStart(2, '0');
-            const timestamp_tech = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-
             updateQuery = `
                 UPDATE tbl_hm_pc_kyc 
                 SET technical_ver = ?, verify_date_tech = ?, remarks_tech = ?
@@ -102,7 +117,6 @@ const setHmpcTechVer = async (req, res) => {
         res.status(500).json({ status: 500, message: "Error updating data." });
     }
 };
-
 
 const setHmpcCRMVer = async (req, res) => {
     try {
@@ -132,18 +146,18 @@ const setHmpcCRMVer = async (req, res) => {
         let updateQuery;
         let updateParams;
 
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const timestamp_crm = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
         if (action == "Rejected") {
             updateQuery = `
                 UPDATE tbl_hm_pc_kyc 
-                SET crm_ver = ?, remarks_crm = ?
+                SET crm_ver = ?, verify_date_crm = ?, remarks_crm = ?
                 WHERE hm_pc_id = ?
             `;
-            updateParams = [action, remarks_crm, hm_pc_id];
+            updateParams = [action, timestamp_crm, remarks_crm, hm_pc_id];
         } else {
-            const now = new Date();
-            const pad = (n) => n.toString().padStart(2, '0');
-            const timestamp_crm = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-
             updateQuery = `
                 UPDATE tbl_hm_pc_kyc 
                 SET crm_ver = ?, verify_date_crm = ?, remarks_crm = ?
@@ -168,7 +182,7 @@ const setHmpcCRMVer = async (req, res) => {
 
 const getHmpcDatabySheet = async (req, res) =>{
     try {
-        queryString = 'SELECT hm_pc_id, `timestamp`, registration_no, ihb_name, executive_name, kyc_details, hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic, hm_bank_account_no, hm_bank_pass_pic, dob_of_hm, pc_name, pc_mobile_no, pc_aadhaar_card_no, pc_aadhaar_card_pic, pc_bank_account_no, pc_bank_pass_pic, dob_of_pc, code_of_hm, code_of_pc, technical_ver, crm_ver, verify_date_tech, verify_date_crm, hm_bank_name, hm_branch_name, hm_ifsc_code, pc_bank_name, pc_branch_name, pc_ifsc_code, remarks_tech, remarks_crm FROM tbl_hm_pc_kyc';
+        queryString = 'SELECT hm_pc_id, `timestamp`, registration_no, ihb_name, executive_name, kyc_details, hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic, hm_bank_account_no, hm_bank_pass_pic, dob_of_hm, pc_name, pc_mobile_no, pc_aadhaar_card_no, pc_aadhaar_card_pic, pc_bank_account_no, pc_bank_pass_pic, dob_of_pc, code_of_hm, code_of_pc, technical_ver, crm_ver, verify_date_crm, hm_bank_name, hm_branch_name, hm_ifsc_code, pc_bank_name, pc_branch_name, pc_ifsc_code, remarks_tech, remarks_crm FROM tbl_hm_pc_kyc';
 
         const [result] = await db.promise().query(queryString);
         const dataArray = convertObjectToArray(result);
@@ -180,4 +194,107 @@ const getHmpcDatabySheet = async (req, res) =>{
     }
 };
 
-module.exports = {getHmpcData, getHmpcDatabyID, setHmpcDatatoSql, setHmpcTechVer, setHmpcCRMVer,getHmpcDatabySheet}
+const setDuplicateDatatoSql = async (req, res) => {
+    try{
+        let { timestamp, reg_no, ihb_name, kyc_details, executive_name, hm_mobile, pc_mobile } = req.body
+        const isHM = kyc_details == 'HM';
+        const isPC = kyc_details == 'PC' || kyc_details == 'Both Of Them';
+
+        if (isHM) {
+            const [existingRecords] = await db.promise().query(
+                'SELECT * FROM tbl_hm_pc_kyc WHERE hm_mobile_no = ?',
+                [hm_mobile]
+            );
+
+            if (existingRecords.length > 0) {
+                const sameReg = existingRecords.find(r => r.registration_no == reg_no);
+
+                if (sameReg) {
+                    return res.status(200).json({ message: 'HM record already exists. No action taken.' });
+                } else {
+                const source = existingRecords[0];
+
+                const insertQuery = `
+                    INSERT INTO tbl_hm_pc_kyc (
+                    timestamp, registration_no, ihb_name, executive_name, kyc_details,
+                    hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic, hm_bank_account_no,
+                    hm_bank_pass_pic, dob_of_hm, pc_name, pc_mobile_no, pc_aadhaar_card_no,
+                    pc_aadhaar_card_pic, pc_bank_account_no, pc_bank_pass_pic, dob_of_pc,
+                    code_of_hm, code_of_pc, technical_ver, crm_ver, verify_date_tech,
+                    verify_date_crm, hm_bank_name, hm_branch_name, hm_ifsc_code,
+                    pc_bank_name, pc_branch_name, pc_ifsc_code,
+                    remarks_tech, remarks_crm
+                    ) VALUES (
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?
+                    )
+                `;
+
+                const values = [
+                    timestamp, reg_no, ihb_name, executive_name, 'HM', source.hm_name, source.hm_mobile_no, source.hm_aadhaar_card_no, source.hm_aadhaar_card_pic, source.hm_bank_account_no, source.hm_bank_pass_pic, source.dob_of_hm, source.pc_name, source.pc_mobile_no, source.pc_aadhaar_card_no, source.pc_aadhaar_card_pic, source.pc_bank_account_no, source.pc_bank_pass_pic, source.dob_of_pc, source.code_of_hm, source.code_of_pc, source.technical_ver, source.crm_ver, source.verify_date_tech,source.verify_date_crm, source.hm_bank_name, source.hm_branch_name, source.hm_ifsc_code, source.pc_bank_name, source.pc_branch_name, source.pc_ifsc_code, source.remarks_tech, source.remarks_crm
+                ];
+
+                await db.promise().query(insertQuery, values);
+                return res.status(201).json({ message: 'New HM record inserted with different registration number.' });
+                }
+            }
+
+            return res.status(200).json({ message: 'No matching HM mobile found. No action taken.' });
+        }
+
+        if (isPC) {
+            const [existingRecords] = await db.promise().query(
+                'SELECT * FROM tbl_hm_pc_kyc WHERE pc_mobile_no = ?',
+                [pc_mobile]
+            );
+
+            if (existingRecords.length > 0) {
+                const sameReg = existingRecords.find(r => r.registration_no === reg_no);
+
+                if (sameReg) {
+                    return res.status(200).json({ message: 'PC record already exists. No action taken.' });
+                } else {
+                const source = existingRecords[0];
+
+                const insertQuery = `
+                    INSERT INTO tbl_hm_pc_kyc (
+                    timestamp, registration_no, ihb_name, executive_name, kyc_details,
+                    hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic, hm_bank_account_no,
+                    hm_bank_pass_pic, dob_of_hm, pc_name, pc_mobile_no, pc_aadhaar_card_no,
+                    pc_aadhaar_card_pic, pc_bank_account_no, pc_bank_pass_pic, dob_of_pc,
+                    code_of_hm, code_of_pc, technical_ver, crm_ver, verify_date_tech,
+                    verify_date_crm, hm_bank_name, hm_branch_name, hm_ifsc_code,
+                    pc_bank_name, pc_branch_name, pc_ifsc_code,
+                    remarks_tech, remarks_crm
+                    ) VALUES (
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?
+                    )
+                `;
+
+                const values = [
+                    timestamp, reg_no, ihb_name, executive_name, 'PC', source.hm_name, source.hm_mobile_no, source.hm_aadhaar_card_no, source.hm_aadhaar_card_pic, source.hm_bank_account_no, source.hm_bank_pass_pic, source.dob_of_hm, source.pc_name, source.pc_mobile_no, source.pc_aadhaar_card_no, source.pc_aadhaar_card_pic, source.pc_bank_account_no, source.pc_bank_pass_pic, source.dob_of_pc, source.code_of_hm, source.code_of_pc, source.technical_ver, source.crm_ver, source.verify_date_tech, source.verify_date_crm, source.hm_bank_name, source.hm_branch_name, source.hm_ifsc_code, source.pc_bank_name, source.pc_branch_name, source.pc_ifsc_code, source.remarks_tech, source.remarks_crm
+                ];
+
+                await db.promise().query(insertQuery, values);
+                return res.status(201).json({ message: 'New PC record inserted with different registration number.' });
+                }
+            }
+
+            return res.status(200).json({ message: 'No matching PC mobile found. No action taken.' });
+        }
+
+        res.status(400).json({ message: 'Invalid kyc_details type provided.' });
+    } catch (error) {
+        console.error("Error inserting Data:", error);
+        res.status(500).json({ status: 500, message: "Error updating data." });
+    }
+}
+
+module.exports = {getHmpcData, getHmpcDatabyID, setHmpcDatatoSql, setHmpcTechVer, setHmpcCRMVer,getHmpcDatabySheet, setDuplicateDatatoSql}
