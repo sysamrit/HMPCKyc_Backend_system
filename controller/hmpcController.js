@@ -371,6 +371,19 @@ const setDuplicateDatatoSql = async (req, res) => {
         console.error("Error inserting Data:", error);
         res.status(500).json({ status: 500, message: "Error updating data." });
     }
+};
+
+const getHmpcPendingData = async (req, res) => {
+    try{
+        let selectQuery = `SELECT COUNT(CASE WHEN technical_ver IS NULL OR technical_ver = '' THEN 1 END) AS pending_tech_ver, COUNT(CASE WHEN crm_ver IS NULL OR crm_ver = '' THEN 1 END) AS pending_crm_ver FROM tbl_hm_pc_kyc`;
+
+        const [rows] = await db.promise().execute(selectQuery);
+
+        res.status(200).json({ status: 200, data: rows[0] });
+    } catch (error) {
+        console.error("Error inserting Data:", error);
+        res.status(500).json({ status: 500, message: "Error updating data." });
+    }
 }
 
-module.exports = { getHmpcTechData, getHmpcCRMData, getHmpcDatabyID, setHmpcDatatoSql, setHmpcTechVer, setHmpcCRMVer, getHmpcDatabySheet, setDuplicateDatatoSql }
+module.exports = { getHmpcTechData, getHmpcCRMData, getHmpcDatabyID, setHmpcDatatoSql, setHmpcTechVer, setHmpcCRMVer, getHmpcDatabySheet, setDuplicateDatatoSql, getHmpcPendingData }
