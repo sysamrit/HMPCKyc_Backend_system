@@ -1,9 +1,10 @@
 const express=require('express');
-const { getHmpcData, getHmpcDatabyID, setHmpcDatatoSql, setHmpcTechVer, setHmpcCRMVer, getHmpcDatabySheet, setDuplicateDatatoSql } = require('../controller/hmpcController');
+const { getHmpcTechData, getHmpcCRMData, getHmpcDatabyID, setHmpcDatatoSql, setHmpcTechVer, setHmpcCRMVer, getHmpcDatabySheet, setDuplicateDatatoSql } = require('../controller/hmpcController');
 
 const hmpccrmdata=express.Router();
 
-hmpccrmdata.get('/gethmpcdata', getHmpcData);
+hmpccrmdata.get('/gethmpctechdata', getHmpcTechData);
+hmpccrmdata.get('/gethmpccrmdata', getHmpcCRMData);
 hmpccrmdata.get('/gethmpcdatabyid/:hmpcid', getHmpcDatabyID);
 hmpccrmdata.post('/sethmpcdatatosql', setHmpcDatatoSql);
 hmpccrmdata.put('/sethmpctechver', setHmpcTechVer);

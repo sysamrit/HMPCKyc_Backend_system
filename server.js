@@ -3,7 +3,7 @@ const dotenv=require('dotenv').config();
 const port=process.env.PORT || 3300
 const {db}=require('./db/db');
 const cors=require('cors');
-const morgan = require('morgan');
+
 
 const app=express();
 
@@ -11,7 +11,7 @@ const app=express();
 app.use(express.urlencoded());
 app.use(express.json());
 app.use(cors('*'));
-app.use(morgan('dev'));
+
 
 db.connect((err) => {
     if (err) {
