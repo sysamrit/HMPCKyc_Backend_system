@@ -387,7 +387,7 @@ const setDuplicateDatatoSql = async (req, res) => {
 
 const getHmpcPendingData = async (req, res) => {
     try{
-        let selectQuery = `SELECT COUNT(CASE WHEN technical_ver IS NULL OR technical_ver = '' THEN 1 END) AS pending_tech_ver, COUNT(CASE WHEN crm_ver IS NULL OR crm_ver = '' THEN 1 END) AS pending_crm_ver FROM tbl_hm_pc_kyc`;
+        let selectQuery = `SELECT COUNT(CASE WHEN technical_ver IS NULL OR technical_ver = '' THEN 1 END) AS pending_tech_ver, COUNT(CASE WHEN (crm_ver IS NULL OR crm_ver = '') AND technical_ver = 'Verified' THEN 1 END) AS pending_crm_ver FROM tbl_hm_pc_kyc`;
 
         const [rows] = await db.promise().execute(selectQuery);
 
