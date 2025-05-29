@@ -263,7 +263,7 @@ const setHmpcCRMVer = async (req, res) => {
 
 const getHmpcDatabySheet = async (req, res) => {
     try {
-        queryString = 'SELECT `timestamp`, registration_no, ihb_name, executive_name, kyc_details, hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic, hm_bank_account_no, hm_bank_pass_pic, dob_of_hm, pc_name, pc_mobile_no, pc_aadhaar_card_no, pc_aadhaar_card_pic, pc_bank_account_no, pc_bank_pass_pic, dob_of_pc, code_of_hm, code_of_pc, technical_ver, crm_ver, verify_date_tech, verify_date_crm, hm_bank_name, hm_branch_name, hm_ifsc_code, pc_bank_name, pc_branch_name, pc_ifsc_code, remarks_tech, remarks_crm FROM tbl_hm_pc_kyc';
+        queryString = `SELECT DATE_FORMAT(\`timestamp\`, '%Y-%m-%d %H:%i:%s') AS \`timestamp\`, registration_no, ihb_name, executive_name, kyc_details, hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic, hm_bank_account_no, hm_bank_pass_pic, dob_of_hm, pc_name, pc_mobile_no, pc_aadhaar_card_no, pc_aadhaar_card_pic, pc_bank_account_no, pc_bank_pass_pic, dob_of_pc, code_of_hm, code_of_pc, technical_ver, crm_ver, verify_date_tech, verify_date_crm, hm_bank_name, hm_branch_name, hm_ifsc_code, pc_bank_name, pc_branch_name, pc_ifsc_code, remarks_tech, remarks_crm FROM tbl_hm_pc_kyc`;
 
         const [result] = await db.promise().query(queryString);
         const dataArray = convertObjectToArray(result);
