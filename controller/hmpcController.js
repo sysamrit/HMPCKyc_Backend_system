@@ -8,7 +8,7 @@ const getHmpcTechData = async (req, res) => {
                 *,
                 IF(technical_ver IS NULL OR technical_ver = '', 'Pending', technical_ver) AS technical_ver,
                 IF(crm_ver IS NULL OR crm_ver = '', 'Pending', crm_ver) AS crm_ver
-            FROM tbl_hm_pc_kyc
+            FROM tbl_hm_pc_kyc ORDER BY technical_ver IS NOT NULL AND technical_ver != '' ASC
         `;
 
         const [hmpcData] = await db.promise().execute(hmpcQuery);
@@ -27,7 +27,7 @@ const getHmpcCRMData = async (req, res) => {
                 *,
                 IF(technical_ver IS NULL OR technical_ver = '', 'Pending', technical_ver) AS technical_ver,
                 IF(crm_ver IS NULL OR crm_ver = '', 'Pending', crm_ver) AS crm_ver
-            FROM tbl_hm_pc_kyc WHERE technical_ver = 'Verified'
+            FROM tbl_hm_pc_kyc WHERE technical_ver = 'Verified' ORDER BY crm_ver IS NOT NULL AND crm_ver != '' ASC
         `;
 
         const [hmpcData] = await db.promise().execute(hmpcQuery);
@@ -264,6 +264,8 @@ const setHmpcCRMVer = async (req, res) => {
 const getHmpcDatabySheet = async (req, res) => {
     try {
         queryString = 'SELECT `timestamp`, registration_no, ihb_name, executive_name, kyc_details, hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic, hm_bank_account_no, hm_bank_pass_pic, dob_of_hm, pc_name, pc_mobile_no, pc_aadhaar_card_no, pc_aadhaar_card_pic, pc_bank_account_no, pc_bank_pass_pic, dob_of_pc, code_of_hm, code_of_pc, technical_ver, crm_ver, verify_date_tech, verify_date_crm, hm_bank_name, hm_branch_name, hm_ifsc_code, pc_bank_name, pc_branch_name, pc_ifsc_code, remarks_tech, remarks_crm FROM tbl_hm_pc_kyc';
+
+        let [result] = await db.promise().execute(queryString);
 
         const formatDateString = (str) => {
             const [datePart, timePart] = str.split(' ');
