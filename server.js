@@ -18,6 +18,15 @@ db.connect((err) => {
         console.error('SQL connection failed: ' + err);
         return;
     }
+    setInterval(() => {
+        db.query('SELECT 1', (err) => {
+          if (err) {
+            console.error('Keep-alive query failed:', err);
+          }
+          console.log("Connection statying alive....");
+          
+        });
+      }, 3600000);
 });
 
 app.use('/api/v1/hmpc',require('./router/hmpcRouter'));
