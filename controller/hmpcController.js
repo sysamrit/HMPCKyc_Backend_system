@@ -278,6 +278,12 @@ const getHmpcDatabySheet = async (req, res) => {
             if (row.timestamp) {
                 row.timestamp = formatDateString(row.timestamp);
             }
+            if(row.verify_date_tech){
+                row.verify_date_tech = formatDateString(row.verify_date_tech);
+            }
+            if(row.verify_date_crm){
+                row.verify_date_crm = formatDateString(row.verify_date_crm);
+            }
             return row;
         });
         const dataArray = convertObjectToArray(formattedResult);
