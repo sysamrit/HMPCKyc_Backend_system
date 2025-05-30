@@ -93,6 +93,7 @@ const setHmpcDatatoSql = async (req, res) => {
     // req.body=incomingData;
     const data = req.body.data;
     try{
+        let ihbno = data[1];
         const kyc = data[4];
         const hmPhone = data[6];
         const pcPhone = data[13];
@@ -106,6 +107,82 @@ const setHmpcDatatoSql = async (req, res) => {
                 return res.status(400).json({ 
                     status: 400, 
                     message: "HM phone number is blocked." 
+                });
+            }
+
+            const [exactMatch] = await db.promise().execute(
+                `SELECT * FROM tbl_hm_pc_kyc WHERE registration_no = ? AND hm_mobile_no = ?`,
+                [ihbno, hmPhone]
+            );
+            if (exactMatch.length > 0) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "This IHB and HM phone number combination already exists."
+                });
+            }
+
+            // Check if hmPhone exists with different ihbno
+            const [hmPhoneMatch] = await db.promise().execute(
+                `SELECT * FROM tbl_hm_pc_kyc WHERE hm_mobile_no = ?`,
+                [hmPhone]
+            );
+
+            if (hmPhoneMatch.length > 0) {
+                const existingRow = hmPhoneMatch[0];
+
+                // Create a new data array:
+                const newData = [
+                    ...data.slice(0, 5), // data[0] to data[4] from request
+                    existingRow.hm_name,
+                    existingRow.hm_mobile_no,
+                    existingRow.hm_aadhaar_card_no,
+                    existingRow.hm_aadhaar_card_pic,
+                    existingRow.hm_bank_account_no,
+                    existingRow.hm_bank_pass_pic,
+                    existingRow.dob_of_hm,
+                    existingRow.pc_name,
+                    existingRow.pc_mobile_no,
+                    existingRow.pc_aadhaar_card_no,
+                    existingRow.pc_aadhaar_card_pic,
+                    existingRow.pc_bank_account_no,
+                    existingRow.pc_bank_pass_pic,
+                    existingRow.dob_of_pc,
+                    existingRow.code_of_hm,
+                    existingRow.code_of_pc,
+                    existingRow.technical_ver,
+                    existingRow.crm_ver,
+                    existingRow.verify_date_tech,
+                    existingRow.verify_date_crm,
+                    existingRow.hm_bank_name,
+                    existingRow.hm_branch_name,
+                    existingRow.hm_ifsc_code,
+                    existingRow.pc_bank_name,
+                    existingRow.pc_branch_name,
+                    existingRow.pc_ifsc_code,
+                    existingRow.remarks_tech,
+                    existingRow.remarks_crm
+                ];
+
+                // Insert the new merged row
+                const insertquery = `
+                    INSERT INTO tbl_hm_pc_kyc (
+                        timestamp, registration_no, ihb_name, executive_name, kyc_details,
+                        hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic,
+                        hm_bank_account_no, hm_bank_pass_pic, dob_of_hm,
+                        pc_name, pc_mobile_no, pc_aadhaar_card_no, pc_aadhaar_card_pic,
+                        pc_bank_account_no, pc_bank_pass_pic, dob_of_pc,
+                        code_of_hm, code_of_pc, technical_ver, crm_ver,
+                        verify_date_tech, verify_date_crm,
+                        hm_bank_name, hm_branch_name, hm_ifsc_code,
+                        pc_bank_name, pc_branch_name, pc_ifsc_code,
+                        remarks_tech, remarks_crm
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
+                await db.promise().execute(insertquery, newData);
+
+                return res.status(200).json({
+                    status: 200,
+                    message: "Data inserted by merging HM phone existing row."
                 });
             }
         }
@@ -122,22 +199,84 @@ const setHmpcDatatoSql = async (req, res) => {
                     message: "PC phone number is blocked." 
                 });
             }
+
+            const [exactMatch] = await db.promise().execute(
+                `SELECT * FROM tbl_hm_pc_kyc WHERE registration_no = ? AND pc_mobile_no = ?`,
+                [ihbno, hmPhone]
+            );
+            if (exactMatch.length > 0) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "This IHB and PC phone number combination already exists."
+                });
+            }
+
+            // Check if hmPhone exists with different ihbno
+            const [hmPhoneMatch] = await db.promise().execute(
+                `SELECT * FROM tbl_hm_pc_kyc WHERE pc_mobile_no = ?`,
+                [hmPhone]
+            );
+
+            if (hmPhoneMatch.length > 0) {
+                const existingRow = hmPhoneMatch[0];
+
+                // Create a new data array:
+                const newData = [
+                    ...data.slice(0, 5), // data[0] to data[4] from request
+                    existingRow.hm_name,
+                    existingRow.hm_mobile_no,
+                    existingRow.hm_aadhaar_card_no,
+                    existingRow.hm_aadhaar_card_pic,
+                    existingRow.hm_bank_account_no,
+                    existingRow.hm_bank_pass_pic,
+                    existingRow.dob_of_hm,
+                    existingRow.pc_name,
+                    existingRow.pc_mobile_no,
+                    existingRow.pc_aadhaar_card_no,
+                    existingRow.pc_aadhaar_card_pic,
+                    existingRow.pc_bank_account_no,
+                    existingRow.pc_bank_pass_pic,
+                    existingRow.dob_of_pc,
+                    existingRow.code_of_hm,
+                    existingRow.code_of_pc,
+                    existingRow.technical_ver,
+                    existingRow.crm_ver,
+                    existingRow.verify_date_tech,
+                    existingRow.verify_date_crm,
+                    existingRow.hm_bank_name,
+                    existingRow.hm_branch_name,
+                    existingRow.hm_ifsc_code,
+                    existingRow.pc_bank_name,
+                    existingRow.pc_branch_name,
+                    existingRow.pc_ifsc_code,
+                    existingRow.remarks_tech,
+                    existingRow.remarks_crm
+                ];
+
+                // Insert the new merged row
+                const insertquery = `
+                    INSERT INTO tbl_hm_pc_kyc (
+                        timestamp, registration_no, ihb_name, executive_name, kyc_details,
+                        hm_name, hm_mobile_no, hm_aadhaar_card_no, hm_aadhaar_card_pic,
+                        hm_bank_account_no, hm_bank_pass_pic, dob_of_hm,
+                        pc_name, pc_mobile_no, pc_aadhaar_card_no, pc_aadhaar_card_pic,
+                        pc_bank_account_no, pc_bank_pass_pic, dob_of_pc,
+                        code_of_hm, code_of_pc, technical_ver, crm_ver,
+                        verify_date_tech, verify_date_crm,
+                        hm_bank_name, hm_branch_name, hm_ifsc_code,
+                        pc_bank_name, pc_branch_name, pc_ifsc_code,
+                        remarks_tech, remarks_crm
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
+                await db.promise().execute(insertquery, newData);
+
+                return res.status(200).json({
+                    status: 200,
+                    message: "Data inserted by merging HM phone existing row."
+                });
+            }
         }
-
-        let checkQuery = `
-            SELECT * FROM tbl_hm_pc_kyc 
-            WHERE hm_mobile_no = ? AND pc_mobile_no = ?
-        `;
-        const [existing] = await db.promise().execute(checkQuery, [hmPhone, pcPhone]);
-
-        if (existing.length > 0) {
-
-            return res.status(400).json({ 
-                status: 400, 
-                message: "Either HM or PC phone number already exists." 
-            });
-        }
-
+        
         const insertquery = 'INSERT INTO `tbl_hm_pc_kyc`(`timestamp`,`registration_no`,`ihb_name`,`executive_name`,`kyc_details`,`hm_name`,`hm_mobile_no`,`hm_aadhaar_card_no`,`hm_aadhaar_card_pic`,`hm_bank_account_no`,`hm_bank_pass_pic`,`dob_of_hm`,`pc_name`,`pc_mobile_no`,`pc_aadhaar_card_no`,`pc_aadhaar_card_pic`,`pc_bank_account_no`,`pc_bank_pass_pic`,`dob_of_pc`,`code_of_hm`,`code_of_pc`,`technical_ver`,`crm_ver`,`verify_date_tech`,`verify_date_crm`,`hm_bank_name`,`hm_branch_name`,`hm_ifsc_code`,`pc_bank_name`,`pc_branch_name`,`pc_ifsc_code`,`remarks_tech`,`remarks_crm`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         await db.promise().execute(insertquery, data);
